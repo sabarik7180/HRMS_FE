@@ -66,10 +66,8 @@ const EmployeeManagement = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {employees.map((employee) => (
                     <div key={employee.id} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
-                        <div className="flex justify-between items-start mb-4">
-                            <div className="h-12 w-12 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-xl">
-                                {employee.name.charAt(0)}
-                            </div>
+                        <div className="flex justify-between items-center mb-2">
+                            <h3 className="text-xl font-semibold text-gray-800">{employee.name}</h3>
                             <div className="flex space-x-2">
                                 <button
                                     onClick={() => handleEditClick(employee)}
@@ -86,8 +84,6 @@ const EmployeeManagement = () => {
                             </div>
                         </div>
 
-                        <h3 className="text-xl font-semibold text-gray-800 mb-1">{employee.name}</h3>
-
                         <div className="space-y-2 text-gray-600">
                             <div className="flex items-center">
                                 <Mail className="w-4 h-4 mr-2" />
@@ -103,7 +99,7 @@ const EmployeeManagement = () => {
             </div>
 
             {isModalOpen && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+                <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4 z-50">
                     <div className="bg-white rounded-lg w-full max-w-md p-6">
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="text-xl font-bold text-gray-800">

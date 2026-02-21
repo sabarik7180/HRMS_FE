@@ -1,25 +1,37 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, X, Mail, Briefcase } from 'lucide-react';
 import toast from 'react-hot-toast';
-
-const initialEmployees = [
-    { id: 1, name: 'John Doe', email: 'john@example.com', department: 'Engineering' },
-    { id: 2, name: 'Jane Smith', email: 'jane@example.com', department: 'Product' },
-    { id: 3, name: 'Mike Johnson', email: 'mike@example.com', department: 'Design' },
-    { id: 4, name: 'Sarah Wilson', email: 'sarah@example.com', department: 'Marketing' },
-    { id: 5, name: 'Tom Brown', email: 'tom@example.com', department: 'HR' },
-];
+import { getEmployees, addEmployee, updateEmployee, deleteEmployee } from '../services/employeeService';
 
 const EmployeeManagement = () => {
-    const [employees, setEmployees] = useState(initialEmployees);
+    const [employees, setEmployees] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingEmployee, setEditingEmployee] = useState(null);
-    const [formData, setFormData] = useState({ name: '', email: '', department: '' });
+    const [formData, setFormData] = useState({ emp_name: '', email: '', department: '' });
+
+    useEffect(() => {
+        fetchEmployees();
+    }, []);
+
+    const fetchEmployees = async () => {
+        try {
+            const response = await getEmployees();
+            if (response.ok) {
+                const data = await response.json();
+                setEmployees(data);
+            } else {
+                toast.error('Failed to fetch employees');
+            }
+        } catch (error) {
+            console.error('Error fetching employees:', error);
+            toast.error('Error connecting to server');
+        }
+    };
 
     const handleAddClick = () => {
         setEditingEmployee(null);
-        setFormData({ name: '', email: '', department: '' });
+        setFormData({ emp_name: '', email: '', department: '' });
         setIsModalOpen(true);
     };
 
@@ -29,25 +41,52 @@ const EmployeeManagement = () => {
         setIsModalOpen(true);
     };
 
-    const handleDeleteClick = (id) => {
+    const handleDeleteClick = async (id) => {
         if (window.confirm('Are you sure you want to delete this employee?')) {
-            setEmployees(employees.filter(emp => emp.id !== id));
-            toast.success('Employee deleted successfully');
+            try {
+                const response = await deleteEmployee(id);
+                if (response.ok) {
+                    setEmployees(employees.filter(emp => emp.id !== id));
+                    toast.success('Employee deleted successfully');
+                } else {
+                    toast.error(response.detail || 'Error deleting employee.');
+                }
+            } catch (error) {
+                console.error('Error deleting employee:', error);
+                toast.error('Error connecting to server');
+            }
         }
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        if (editingEmployee) {
-            setEmployees(employees.map(emp =>
-                emp.id === editingEmployee.id ? { ...formData, id: emp.id } : emp
-            ));
-            toast.success('Employee updated successfully');
-        } else {
-            setEmployees([...employees, { ...formData, id: Date.now() }]);
-            toast.success('Employee added successfully');
+        try {
+            if (editingEmployee) {
+                const response = await updateEmployee(editingEmployee.id, formData);
+                console.log(response);
+                if (response.ok) {
+                    fetchEmployees();
+                    toast.success('Employee updated successfully');
+                    setIsModalOpen(false);
+                } else {
+                    const errorData = await response.json();
+                    toast.error(errorData.detail || 'Error updating employee.');
+                }
+            } else {
+                const response = await addEmployee(formData);
+                if (response.ok) {
+                    fetchEmployees();
+                    toast.success('Employee added successfully');
+                    setIsModalOpen(false);
+                } else {
+                    const errorData = await response.json();
+                    toast.error(errorData.detail || 'Error adding employee.');
+                }
+            }
+        } catch (error) {
+            console.error('Error saving employee:', error);
+            toast.error('Error connecting to server');
         }
-        setIsModalOpen(false);
     };
 
     return (
@@ -67,7 +106,7 @@ const EmployeeManagement = () => {
                 {employees.map((employee) => (
                     <div key={employee.id} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
                         <div className="flex justify-between items-center mb-2">
-                            <h3 className="text-xl font-semibold text-gray-800">{employee.name}</h3>
+                            <h3 className="text-xl font-semibold text-gray-800">{employee.emp_name}</h3>
                             <div className="flex space-x-2">
                                 <button
                                     onClick={() => handleEditClick(employee)}
@@ -115,8 +154,8 @@ const EmployeeManagement = () => {
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
                                 <input
                                     type="text"
-                                    value={formData.name}
-                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                    value={formData.emp_name}
+                                    onChange={(e) => setFormData({ ...formData, emp_name: e.target.value })}
                                     className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                     required
                                 />
